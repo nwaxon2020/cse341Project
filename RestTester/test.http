@@ -1,0 +1,43 @@
+
+GET http://localhost:8080/project
+
+###
+
+POST http://localhost:8080/project/registerClient HTTP/1.1
+Content-Type: application/json
+
+{
+    "fullName": "prince delete",
+    "email": "delete@gmail.com",
+    "password": "delete222",
+    "country": "none",
+    "comment": "none"
+}
+
+###
+
+POST http://localhost:8080/project/logIn HTTP/1.1
+Content-Type: application/json
+
+{
+    "email": "princenwachukwu@gmail.com",
+    "password": "prince20"
+}
+
+###
+
+GET http://localhost:8080/project/client-comment/675b1f45d7253ca52c769ca3
+
+####
+
+PUT http://localhost:8080/project/update-client/675b1f45d7253ca52c769ca3 HTTP/1.1
+Content-Type: application/json
+
+{
+    "fullName": "Prince Nwachukwu",
+    "password": "prince20"
+}
+
+###
+
+DELETE http://localhost:8080/project/delete-client-account/675b27a5c093109257109346 HTTP/1.1
