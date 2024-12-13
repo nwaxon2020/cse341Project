@@ -1,8 +1,15 @@
 
+//Get the Home page
 GET http://localhost:8080/project
 
 ###
 
+//Get all users
+http://localhost:8080/project/all-clients
+
+###
+
+//create  new clent
 POST http://localhost:8080/project/registerClient HTTP/1.1
 Content-Type: application/json
 
@@ -16,20 +23,23 @@ Content-Type: application/json
 
 ###
 
+// log in a client
 POST http://localhost:8080/project/logIn HTTP/1.1
 Content-Type: application/json
 
 {
-    "email": "princenwachukwu@gmail.com",
-    "password": "prince20"
+    "email": "delete@gmail.com",
+    "password": "delete222"
 }
 
 ###
 
-GET http://localhost:8080/project/client-comment/675b1f45d7253ca52c769ca3
+// Get a single client in the client is Logged in
+GET http://localhost:8080/project/client-comment/675b1ee1d7253ca52c769ca2
 
 ####
 
+//Update a client account
 PUT http://localhost:8080/project/update-client/675b1f45d7253ca52c769ca3 HTTP/1.1
 Content-Type: application/json
 
@@ -40,4 +50,5 @@ Content-Type: application/json
 
 ###
 
-DELETE http://localhost:8080/project/delete-client-account/675b27a5c093109257109346 HTTP/1.1
+//Delete this Client
+DELETE http://localhost:8080/project/delete-client-account/675c26dd338c8fff40360152 HTTP/1.1

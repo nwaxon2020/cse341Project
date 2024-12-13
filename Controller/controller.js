@@ -13,43 +13,72 @@ const { restart } = require("nodemon");
 */
 
 //Validation for registering a new Client
-const validateRegister = [
+const validateRegister = (isUpdate = false) => [
+    // Full Name Validation
     check("fullName")
-    .notEmpty().withMessage("Name field can not be empty")
-    .bail()
-    .isLength({min: 3}).withMessage("Name cannot be less that 3 characters")
-    .bail()
-    .matches(/^[A-Za-z\s]+$/).withMessage("Letters Only"),
+        .if((_, { req }) => !isUpdate || req.body.fullName !== undefined)
+        .notEmpty().withMessage("Name field cannot be empty")
+        .bail()
+        .isLength({ min: 3 }).withMessage("Name cannot be less than 3 characters")
+        .bail()
+        .matches(/^[A-Za-z\s]+$/).withMessage("Letters only"),
 
+    // Email Validation
     check("email")
-    .isEmail().withMessage("Please enter a valid email address!!!")
-    .bail()
-    .custom(async(email)=>{
+        .if((_, { req }) => !isUpdate || req.body.email !== undefined)
+        .isEmail().withMessage("Please enter a valid email address!")
+        .bail()
+        .custom(async (email) => {
+            const db = await mongoDb.dataBase();
+            const user = await db.collection("clients").findOne({ email });
 
-        const db = await mongoDb.dataBase();
-        const user = await db.collection("clients").findOne({email: email});
+            if (user) {
+                throw new Error("Client email already exists. Please log in.");
+            }
+        }),
 
-        if(user){
-            throw new Error("Client email already exist please log In");
-        }
-    }),
-
+    // Password Validation
     check("password")
-    .notEmpty().withMessage("Please enter a valid password!!!")
-    .matches(/\d/).withMessage("Please include atlease one number in your password!!!")
-    .isLength({min: 8}).withMessage("Password must be atleat 8 characters long!!!"),
+        .if((_, { req }) => !isUpdate || req.body.password !== undefined)
+        .notEmpty().withMessage("Password cannot be empty")
+        .bail()
+        .matches(/\d/).withMessage("Please include at least one number in your password")
+        .bail()
+        .isLength({ min: 8 }).withMessage("Password must be at least 8 characters long"),
 
+    // Country Validation
     check("country")
-    .notEmpty().withMessage("Please enter your Country!!!")
-    .bail()
-    .isLength({min: 3}).withMessage("At least 3 characters are allowed for Country entery"),
+        .if((_, { req }) => !isUpdate || req.body.country !== undefined)
+        .notEmpty().withMessage("Country cannot be empty")
+        .bail()
+        .isLength({ min: 3 }).withMessage("Country must be at least 3 characters"),
 
+    // Comment Validation
     check("comment")
-    .notEmpty().withMessage("Comment cannot be empty!")
-    .bail()
-    .isLength({min: 3}).withMessage("Comment cannot be less than 3 characters!!!")
+        .if((_, { req }) => !isUpdate || req.body.comment !== undefined)
+        .notEmpty().withMessage("Comment cannot be empty")
+        .bail()
+        .isLength({ min: 3 }).withMessage("Comment must be at least 3 characters")
+];
 
-]
+// Get all users
+const userDetails = async (req, res)=>{
+    try {
+ 
+        const db = await mongoDb.dataBase();
+        const users = await db.collection("clients").find().toArray();
+    
+        if(users.length === 0){
+            return res.send("No Item found")
+        }
+
+        await res.status(200).json(users);    
+ 
+    } catch (error) {
+        console.error("Something went wrong !!!❌")
+        res.status(500).send("SEVER ERROR 🌍")
+    }
+ }
 
 // create a new Client
 const createNewClient = async(req, res)=>{
@@ -108,6 +137,8 @@ const logInClient = async (req, res)=>{
                 return res.status(404).send({error: "User not authorised OR Incorrect password!!"});
             }
 
+            req.session.user = user;
+
             return res.status(200).send({success: "Cleint logged In Successfuly ✔", yourInformation: user});
         }
 
@@ -139,6 +170,10 @@ const getClientcomment = async (req, res)=>{
             return res.status(400).send({err: "User not valid"});
         }
 
+        if(!req.session.user || req.session.user._id.toString() !== user._id.toString()){
+            return res.status(400).send({error: "Please log in to continue!!!"})
+        }
+
         await res.status(200).send({
             Name: user.fullName,
             Comment: user.comment,
@@ -161,6 +196,21 @@ const updateClientInfo = async (req, res)=>{
         }
         const clientId = new ObjectId(String(id));
 
+        //Session setting for wrong user entry
+        const db = await mongoDb.dataBase();
+        let user = await db.collection("clients").findOne({_id: clientId});
+        if(!req.session.user || req.session.user._id.toString() !== user._id.toString()){
+            return res.status(400).send({error: "Un-Authorised....Please log in to continue!!!"})
+        }
+
+        const result = validationResult(req);
+
+        if(!result.isEmpty()){
+            const issues = result.array().map((err)=> err.msg);
+            return res.status(400).send({error: issues})
+        }
+
+
         const{email, password, country, comment} = req.body
 
         let updateData = {$set: {...req.body}};
@@ -170,8 +220,8 @@ const updateClientInfo = async (req, res)=>{
             updateData.$set.password = newHasedPw;
         }
 
-        const db = await mongoDb.dataBase();
-        const user = await db.collection("clients").updateOne({_id: clientId}, updateData);
+        //Update the Client's Account
+        user = await db.collection("clients").updateOne({_id: clientId}, updateData);
 
         if(!user){
             return res.status(400).send({err: "Client Update failed!!!"});
@@ -196,8 +246,14 @@ const deleteClient = async(req, res)=>{
 
         const clientId = new ObjectId(String(id));
 
+        //Session setting for wrong user entry
         const db = await mongoDb.dataBase();
-        const user = await db.collection("clients").deleteOne({_id: clientId});
+        let user = await db.collection("clients").findOne({_id: clientId});
+        if(!req.session.user || req.session.user._id.toString() !== user._id.toString()){
+            return res.status(400).send({error: "Un-Authorised....Please log in to continue!!!"})
+        }
+
+        user = await db.collection("clients").deleteOne({_id: clientId});
 
         //check if there was a delete
         if(user.deletedCount === 0){
@@ -213,6 +269,7 @@ const deleteClient = async(req, res)=>{
 }
 
 module.exports = {
+    userDetails,
     createNewClient, 
     validateRegister,
     logInClient,
