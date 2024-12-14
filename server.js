@@ -6,6 +6,8 @@ const bodyParser = require("body-parser");
 const session = require("express-session");
 const mongoStore = require("connect-mongo"); 
 
+require("./Passport/passport");
+
 
 
 app.use(bodyParser.urlencoded({extended: false}))// for HTML use only

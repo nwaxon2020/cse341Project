@@ -34,6 +34,11 @@ Content-Type: application/json
 
 ###
 
+//Log in with google 
+GET  http://localhost:8080/project/auth/google HTTP/1.1
+
+###
+
 // Get a single client in the client is Logged in
 GET http://localhost:8080/project/client-comment/675b1ee1d7253ca52c769ca2
 
