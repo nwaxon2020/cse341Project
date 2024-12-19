@@ -9,16 +9,17 @@ http://localhost:8080/project/all-clients
 
 ###
 
-//create  new clent
+//create  new clent Account
 POST http://localhost:8080/project/registerClient HTTP/1.1
 Content-Type: application/json
 
 {
-    "fullName": "prince delete",
-    "email": "delete@gmail.com",
-    "password": "delete222",
-    "country": "none",
-    "comment": "none"
+    "fullName": "Michael Udo",
+    "email": "mike@gmail.com",
+    "password": "mike2222",
+    "states": "Accra",
+    "country": "Ghana", 
+    "dateOfBirth": "1996/01/14"   
 }
 
 ###
@@ -28,8 +29,8 @@ POST http://localhost:8080/project/logIn HTTP/1.1
 Content-Type: application/json
 
 {
-    "email": "delete@gmail.com",
-    "password": "delete222"
+    "email": "mike@gmail.com",
+    "password": "mike2222"
 }
 
 ###
@@ -39,12 +40,37 @@ GET  http://localhost:8080/project/auth/google HTTP/1.1
 
 ###
 
-// Get a single client in the client is Logged in
-GET http://localhost:8080/project/client-comment/675b1ee1d7253ca52c769ca2
+// Get a client comment
+GET http://localhost:8080/project/client-comment/6762c3a7a563ffe0697af593
 
 ####
 
-//Update a client account
+//Add comment
+POST http://localhost:8080/project/comment/676424455fa2f21f588fe340 HTTP/1.1
+Content-Type: application/json
+
+{
+    "comment": "I made an Order on tuesday but it didn't arrive...Please check and get back to Me"
+}
+
+###
+
+//Edit comment
+PUT http://localhost:8080/project/edit-comment/6762c3a7a563ffe0697af593/67641cf5dd45255a131c194c HTTP/1.1
+Content-Type: application/json
+
+{
+    "comment": "I dont Like the new Phone created...Its too big to hold"
+} 
+
+###
+
+// Delete Client Comment
+DELETE http://localhost:8080/project/delete-comment/6762c3a7a563ffe0697af593 HTTP/1.1
+
+###
+
+//Update a client Account
 PUT http://localhost:8080/project/update-client/675b1f45d7253ca52c769ca3 HTTP/1.1
 Content-Type: application/json
 
@@ -55,5 +81,41 @@ Content-Type: application/json
 
 ###
 
-//Delete this Client
+//Delete this Client Account
 DELETE http://localhost:8080/project/delete-client-account/675c26dd338c8fff40360152 HTTP/1.1
+
+
+###
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+// log in a client
+POST http://localhost:8080/project/logIn HTTP/1.1
+Content-Type: application/json
+
+{
+    "email": "mike@gmail.com",
+    "password": "mike2222"
+}
+
+############################################
+
+// phone Adding
+POST http://localhost:8080/phone/add-new-phone/676424455fa2f21f588fe340 HTTP/1.1
+Content-Type: application/json
+
+{
+    "phoneModel": "Motoroler",
+    "phoneName": "Es-16 Pro",
+    "sellerContact": "0903452167211"
+}
+
+#################################################
+
+// Get ALL Phones
+GET http://localhost:8080/phone/phones HTTP/1.1
+
+#######################################################
+
+// Get Phones by model
+GET http://localhost:8080/phone/phone-model/Samsung HTTP/1.1

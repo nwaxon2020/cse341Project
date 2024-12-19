@@ -21,7 +21,7 @@ const validateRegister = (isUpdate = false) => [
         .bail()
         .isLength({ min: 3 }).withMessage("Name cannot be less than 3 characters")
         .bail()
-        .matches(/^[A-Za-z\s]+$/).withMessage("Letters only"),
+        .matches(/^[A-Za-z\s]+$/).withMessage("Full Name has to be Letters only"),
 
     // Email Validation
     check("email")
@@ -53,12 +53,12 @@ const validateRegister = (isUpdate = false) => [
         .bail()
         .isLength({ min: 3 }).withMessage("Country must be at least 3 characters"),
 
-    // Comment Validation
-    check("comment")
-        .if((_, { req }) => !isUpdate || req.body.comment !== undefined)
-        .notEmpty().withMessage("Comment cannot be empty")
+    // states Validation
+    check("states")
+        .if((_, { req }) => !isUpdate || req.body.states !== undefined)
+        .notEmpty().withMessage("states cannot be empty")
         .bail()
-        .isLength({ min: 3 }).withMessage("Comment must be at least 3 characters")
+        .isLength({ min: 3 }).withMessage("states must be at least 3 characters")
 ];
 
 // Get all users
@@ -91,16 +91,28 @@ const createNewClient = async(req, res)=>{
             return res.status(400).send({error: issues})
         }
 
-        const {fullName, email, password, country, comment} = req.body;
+        const {fullName, email, password, states, country, dateOfBirth, address} = req.body;
 
         const hashedPw = await bcrypt.hash(password, 13);
+        const dob = new Date(dateOfBirth);
+
+        //validate Address
+        let checkAddress = address || "No Address added";
+
+        // Validate the date
+        if (isNaN(dob.getTime())) { 
+            return res.status(400).send("Please provide a valid date in this format YYYY-MM-DD.");
+        }
+
         
         const newClient = {
             fullName: fullName,
             email: email,
             password: hashedPw,
+            states: states,
             country: country, 
-            comment: comment
+            dateOfBirth: dob.toLocaleDateString(),
+            address: checkAddress     
         };
         
         const db =  await mongoDb.dataBase();
@@ -113,7 +125,7 @@ const createNewClient = async(req, res)=>{
         await res.status(200).send("User Added Successfully ✔")
         
     } catch (err) {
-        console.error("Something went wrong !!!❌")
+        console.error("Something went wrong !!!❌", err)
         res.status(500).send("SEVER ERROR 🌍")
     }
 }
@@ -151,41 +163,6 @@ const logInClient = async (req, res)=>{
     }
 }
 
-//Get a user information
-const getClientcomment = async (req, res)=>{
-    try {
-        
-        const {id} = req.params
-
-        if(!ObjectId.isValid(id)){
-            return res.status(400).send({error: "User not found ❌"});
-        }
-
-        const clientId = new ObjectId(String(id));
-
-        const db = await mongoDb.dataBase();
-        const user = await db.collection("clients").findOne({_id: clientId});
-
-        if(!user){
-            return res.status(400).send({err: "User not valid"});
-        }
-
-        if(!req.session.user || req.session.user._id.toString() !== user._id.toString()){
-            return res.status(400).send({error: "Please log in to continue!!!"})
-        }
-
-        await res.status(200).send({
-            Name: user.fullName,
-            Comment: user.comment,
-            Country: user.country
-        });
-
-    } catch (error) {
-        console.error("Something went wrong !!!❌")
-        res.status(500).send("SEVER ERROR 🌍")
-    }
-}
-
 const updateClientInfo = async (req, res)=>{
     try {
 
@@ -211,13 +188,24 @@ const updateClientInfo = async (req, res)=>{
         }
 
 
-        const{email, password, country, comment} = req.body
+        const{fullName, email, password, states, country, dateOfBirth, address} = req.body
 
         let updateData = {$set: {...req.body}};
+
+        const dob = new Date(dateOfBirth);
 
         if(password){
             const newHasedPw = await bcrypt.hash(password, 13);
             updateData.$set.password = newHasedPw;
+        }
+
+        if(dateOfBirth){
+
+            // Validate the date
+            if (isNaN(dob.getTime())) { 
+                return res.status(400).send("Please provide a valid date in this format YYYY-MM-DD.");
+            }
+            updateData.$set.dateOfBirth = dob;
         }
 
         //Update the Client's Account
@@ -273,7 +261,6 @@ module.exports = {
     createNewClient, 
     validateRegister,
     logInClient,
-    getClientcomment,
     updateClientInfo,
     deleteClient,
 };

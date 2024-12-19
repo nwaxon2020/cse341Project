@@ -1,7 +1,10 @@
 const express = require("express");
 const app = express();
 require("dotenv").config();
+
+const phoneRoute = require("./Router/phoneRouter");
 const router = require("./Router/router");
+
 const bodyParser = require("body-parser");
 const session = require("express-session");
 const mongoStore = require("connect-mongo"); 
@@ -31,6 +34,7 @@ app.use(session({
   }))
 
 app.use("/project", router);
+app.use("/phone", phoneRoute);
 
 
 port = process.env.PORT || 3000;
